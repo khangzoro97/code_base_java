@@ -19,10 +19,12 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Runtime
-FROM eclipse-temurin:17-jre-alpine
+# Sử dụng JRE image (không phải Alpine) để tương thích tốt hơn với multi-platform
+# Alternative: Nếu cần Alpine, có thể dùng amazoncorretto:17-alpine-jdk
+FROM eclipse-temurin:17-jre
 
 # Add non-root user for security
-RUN addgroup -S spring && adduser -S spring -G spring
+RUN groupadd -r spring && useradd -r -g spring spring
 USER spring:spring
 
 WORKDIR /app
@@ -33,9 +35,10 @@ COPY --from=build /app/target/*.jar app.jar
 # Expose port (override with -e SERVER_PORT=8080)
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:${SERVER_PORT:-8080}/actuator/health || exit 1
+# Health check (requires Spring Boot Actuator dependency)
+# Uncomment và thêm spring-boot-starter-actuator vào pom.xml để enable
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+#   CMD curl -f http://localhost:${SERVER_PORT:-8080}/actuator/health || exit 1
 
 # Run application
 # Use exec form để signal handling hoạt động đúng

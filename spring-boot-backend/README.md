@@ -32,23 +32,32 @@ src/main/java/com/example/backend/
 
 ### Run Local (Development)
 
+**Lưu ý**: Development profile giờ sử dụng PostgreSQL. Đảm bảo PostgreSQL đang chạy trước khi start application.
+
 ```bash
-# 1. Clone và navigate vào project
+# 1. Start PostgreSQL (nếu chưa chạy)
+docker-compose up -d postgres
+
+# 2. Clone và navigate vào project
 cd spring-boot-backend
 
-# 2. Run với Maven (sử dụng H2 in-memory database)
+# 3. Run với Maven (sử dụng PostgreSQL)
 ./mvnw spring-boot:run
 
 # Hoặc với profile cụ thể
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 
-# 3. Application sẽ chạy tại http://localhost:8080
+# 4. Application sẽ chạy tại http://localhost:8080
 ```
 
-**H2 Console:** http://localhost:8080/h2-console
-- JDBC URL: `jdbc:h2:mem:devdb`
-- Username: `sa`
-- Password: (để trống)
+**PostgreSQL Connection (Development):**
+- Host: `localhost`
+- Port: `5432`
+- Database: `backenddb`
+- Username: `postgres`
+- Password: `postgres`
+
+**Lưu ý**: Nếu bạn muốn sử dụng H2 (in-memory) cho development, có thể tạo profile `dev-h2` riêng hoặc chỉnh sửa `application-dev.yml`.
 
 ### Run với Docker Compose (Production-like)
 
@@ -68,23 +77,28 @@ docker-compose down -v
 
 ### Environment Variables
 
-Tạo file `.env` trong root directory (hoặc export trực tiếp):
-
+**Quick Setup:**
 ```bash
-# Database
-DB_NAME=backenddb
-DB_USERNAME=postgres
-DB_PASSWORD=your_secure_password
-DB_PORT=5432
+# 1. Copy example file
+cp env.example .env
 
-# Application
-SERVER_PORT=8080
-SPRING_PROFILES_ACTIVE=prod
-
-# Logging
-LOG_LEVEL_ROOT=INFO
-LOG_LEVEL_APP=INFO
+# 2. Edit .env với các giá trị thực tế của bạn
+# Đặc biệt quan trọng: Thay đổi JWT_SECRET cho production!
 ```
+
+**File `env.example`** chứa tất cả các biến môi trường cần thiết với giá trị mặc định và giải thích chi tiết.
+
+**Các biến quan trọng cần cấu hình:**
+- `JWT_SECRET`: **BẮT BUỘC** - Generate secret key an toàn cho production (ít nhất 32 ký tự)
+  ```bash
+  # Generate random secret key
+  openssl rand -base64 32
+  ```
+- `DB_PASSWORD`: Mật khẩu database (không dùng mặc định trong production)
+- `SPRING_PROFILES_ACTIVE`: `dev` (local), `test` (testing), `prod` (production)
+- `SWAGGER_ENABLED`: `true` (dev), `false` (production)
+
+**Docker Compose** sẽ tự động load file `.env` nếu có trong cùng thư mục với `docker-compose.yml`.
 
 ## 🧪 Testing
 
@@ -123,11 +137,91 @@ docker run -p 8080:8080 \
   spring-boot-backend:1.0.0
 ```
 
+## 🔐 Authentication & Security
+
+### JWT Authentication
+
+API sử dụng JWT (JSON Web Token) cho authentication. Sau khi đăng ký hoặc đăng nhập, bạn sẽ nhận được JWT token để sử dụng cho các requests tiếp theo.
+
+#### Register New User
+```bash
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password123",
+  "bio": "Software Engineer"
+}
+```
+
+**Response:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "type": "Bearer",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "bio": "Software Engineer",
+    "createdAt": "2025-12-18T10:00:00",
+    "updatedAt": "2025-12-18T10:00:00"
+  }
+}
+```
+
+#### Login
+```bash
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
+
+#### Using JWT Token
+Sau khi có token, thêm vào header của mọi request:
+```bash
+Authorization: Bearer <your-jwt-token>
+```
+
+**Example:**
+```bash
+curl -X GET http://localhost:8080/api/users \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+### Security Configuration
+
+- **Password Encoding**: BCrypt
+- **JWT Secret**: Cấu hình qua `JWT_SECRET` environment variable
+- **JWT Expiration**: 24 hours (có thể config qua `JWT_EXPIRATION`)
+- **Public Endpoints**: `/api/auth/**`, `/swagger-ui/**`, `/v3/api-docs/**`
+- **Protected Endpoints**: Tất cả endpoints khác cần JWT token
+
 ## 📚 API Documentation
+
+### Swagger UI
+
+API documentation có sẵn tại: **http://localhost:8080/swagger-ui.html**
+
+Swagger UI cho phép:
+- Xem tất cả API endpoints
+- Test API trực tiếp từ browser
+- Xem request/response schemas
+- Authenticate với JWT token trong Swagger UI
+
+**Lưu ý:** Swagger được disable mặc định trong production profile. Enable bằng cách set `SWAGGER_ENABLED=true`.
 
 ### Example: User CRUD API
 
 **Base URL:** `http://localhost:8080/api/users`
+
+**⚠️ Tất cả endpoints này yêu cầu JWT authentication!**
 
 #### Create User
 ```bash
@@ -217,11 +311,13 @@ DELETE /api/users/1
 
 ### Database Configuration
 
-**Development (H2):**
+**Development (PostgreSQL):**
 ```yaml
 spring:
   datasource:
-    url: jdbc:h2:mem:devdb
+    url: jdbc:postgresql://localhost:5432/backenddb
+    username: postgres
+    password: postgres
 ```
 
 **Production (PostgreSQL):**
@@ -233,14 +329,56 @@ spring:
     password: ${DB_PASSWORD}
 ```
 
+## 🗄️ Database Migrations (Flyway)
+
+Project sử dụng **Flyway** để quản lý database schema migrations.
+
+### Migration Files
+
+Migrations được đặt trong: `src/main/resources/db/migration/`
+
+**Naming Convention:**
+- `V{version}__{description}.sql`
+- Ví dụ: `V1__Create_users_table.sql`
+
+### Tạo Migration Mới
+
+1. Tạo file SQL mới trong `src/main/resources/db/migration/`
+2. Đặt tên theo convention: `V{next_version}__{description}.sql`
+3. Flyway sẽ tự động chạy migration khi app khởi động
+
+**Example:**
+```sql
+-- V2__Add_user_status_column.sql
+ALTER TABLE users ADD COLUMN status VARCHAR(20) DEFAULT 'ACTIVE';
+```
+
+### Flyway Commands
+
+```bash
+# Check migration status (via Spring Boot Actuator - nếu có)
+curl http://localhost:8080/actuator/flyway
+
+# Hoặc check trong logs khi app start
+```
+
+### Migration Best Practices
+
+- ✅ Mỗi migration phải idempotent (có thể chạy nhiều lần an toàn)
+- ✅ Sử dụng `IF NOT EXISTS` cho CREATE statements
+- ✅ Test migrations trên dev/test trước khi deploy production
+- ✅ Không sửa migrations đã chạy trong production (tạo migration mới)
+
 ## 📝 Next Steps (Recommended)
 
-1. **Database Migrations**: Thêm Flyway hoặc Liquibase
-2. **API Documentation**: Thêm SpringDoc OpenAPI (Swagger)
-3. **Security**: Thêm Spring Security + JWT
+1. ✅ **Database Migrations**: Đã implement Flyway
+2. ✅ **API Documentation**: Đã implement SpringDoc OpenAPI (Swagger)
+3. ✅ **Security**: Đã implement Spring Security + JWT
 4. **Monitoring**: Thêm Spring Boot Actuator + Prometheus
 5. **Caching**: Thêm Redis cho caching
 6. **Message Queue**: Thêm RabbitMQ/Kafka nếu cần async processing
+7. **Rate Limiting**: Thêm rate limiting cho API endpoints
+8. **Email Service**: Thêm email verification cho user registration
 
 ## 🤝 Contributing
 

@@ -1,5 +1,9 @@
 # Maven
 target/
+
+# Log files
+logs/
+*.log
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -20,6 +24,10 @@ buildNumber.properties
 .project
 .settings/
 bin/
+
+# Keep IDE run configurations (optional - uncomment if you want to share)
+# !.idea/runConfigurations/
+# !.vscode/launch.json
 
 # OS
 .DS_Store

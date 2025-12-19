@@ -3,6 +3,9 @@ package com.example.backend.infrastructure.controller;
 import com.example.backend.application.dto.UserRequest;
 import com.example.backend.application.dto.UserResponse;
 import com.example.backend.application.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +35,14 @@ import java.util.List;
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Users", description = "User management API endpoints")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
     
     private final UserService userService;
     
     @PostMapping
+    @Operation(summary = "Create user", description = "Create a new user (requires authentication)")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
         log.info("POST /api/users - Creating new user");
         UserResponse response = userService.createUser(request);
@@ -44,6 +50,7 @@ public class UserController {
     }
     
     @GetMapping("/{id}")
+    @Operation(summary = "Get user by ID", description = "Retrieve a user by their ID (requires authentication)")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         log.info("GET /api/users/{} - Fetching user", id);
         UserResponse response = userService.getUserById(id);
@@ -51,6 +58,7 @@ public class UserController {
     }
     
     @GetMapping
+    @Operation(summary = "Get all users", description = "Retrieve all users (requires authentication)")
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         log.info("GET /api/users - Fetching all users");
         List<UserResponse> responses = userService.getAllUsers();
@@ -58,6 +66,7 @@ public class UserController {
     }
     
     @PutMapping("/{id}")
+    @Operation(summary = "Update user", description = "Update an existing user (requires authentication)")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserRequest request) {
@@ -67,6 +76,7 @@ public class UserController {
     }
     
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete user", description = "Delete a user by ID (requires authentication)")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         log.info("DELETE /api/users/{} - Deleting user", id);
         userService.deleteUser(id);

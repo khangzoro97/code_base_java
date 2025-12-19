@@ -8,6 +8,7 @@ spring:
   
   jpa:
     hibernate:
+      # Flyway quản lý schema migrations, JPA chỉ validate
       ddl-auto: validate
     show-sql: false
     properties:
@@ -36,4 +37,20 @@ logging:
     name: ${LOG_FILE_PATH:/var/log/backend/application.log}
     max-size: 10MB
     max-history: 30
+  
+  # Flyway for production
+  flyway:
+    enabled: true
+    baseline-on-migrate: false # Production nên có baseline rõ ràng
+    validate-on-migrate: true
+
+# JWT Configuration for production (should use environment variables)
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-must-be-at-least-32-characters-long-for-hs256-algorithm-change-in-production}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# SpringDoc - Disable in production by default
+springdoc:
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
 

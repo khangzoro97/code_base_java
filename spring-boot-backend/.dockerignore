@@ -1,7 +1,4 @@
 target/
-.mvn/
-mvnw
-mvnw.cmd
 .git
 .gitignore
 README.md
@@ -9,4 +6,8 @@ README.md
 .idea/
 .vscode/
 *.iml
+# Keep mvnw and .mvn for Docker build
+!mvnw
+!mvnw.cmd
+!.mvn/
 

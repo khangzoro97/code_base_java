@@ -43,6 +43,15 @@ public class User {
     @Column(length = 500)
     private String bio;
 
+    @NotBlank(message = "Password is required")
+    @Column(nullable = false, length = 255)
+    private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private Role role = Role.USER;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

@@ -1,24 +1,27 @@
 spring:
-  # H2 Database for development
+  # PostgreSQL Database for development
   datasource:
-    url: jdbc:h2:mem:devdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
-  
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/${DB_NAME:backenddb}}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
   
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      # Flyway sẽ quản lý schema migrations, JPA chỉ validate
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
         format_sql: true
+        use_sql_comments: true
+  
+  # Flyway for dev (PostgreSQL)
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: true
 
 # Logging for development
 logging:
@@ -27,4 +30,18 @@ logging:
     com.example.backend: DEBUG
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
+  file:
+    name: ${LOG_FILE_PATH:./logs/application-dev.log}  # Log file cho dev
+    max-size: 10MB
+    max-history: 7  # Giữ 7 file log cũ cho dev
 
+# SpringDoc OpenAPI (Swagger) - Enabled for development
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    try-it-out-enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
