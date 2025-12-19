@@ -1,5 +1,6 @@
 package com.example.backend.application.service;
 
+import com.example.backend.constants.ApplicationConstants;
 import com.example.backend.application.dto.UserRequest;
 import com.example.backend.application.dto.UserResponse;
 import com.example.backend.application.mapper.UserMapper;
@@ -47,7 +48,7 @@ public class UserService {
         
         // Business validation: Check email uniqueness
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already exists: " + request.getEmail());
+            throw new IllegalArgumentException(ApplicationConstants.ERROR_EMAIL_ALREADY_EXISTS);
         }
         
         User user = userMapper.toEntity(request);
@@ -65,7 +66,7 @@ public class UserService {
         log.debug("Fetching user with ID: {}", id);
         
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(ApplicationConstants.ERROR_USER_NOT_FOUND));
         
         return userMapper.toResponse(user);
     }
@@ -93,12 +94,12 @@ public class UserService {
         log.debug("Updating user with ID: {}", id);
         
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(ApplicationConstants.ERROR_USER_NOT_FOUND));
         
         // Business validation: Check email uniqueness (nếu email thay đổi)
         if (!user.getEmail().equals(request.getEmail()) && 
             userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already exists: " + request.getEmail());
+            throw new IllegalArgumentException(ApplicationConstants.ERROR_EMAIL_ALREADY_EXISTS);
         }
         
         userMapper.updateEntity(user, request);
@@ -115,7 +116,7 @@ public class UserService {
         log.debug("Deleting user with ID: {}", id);
         
         if (!userRepository.existsById(id)) {
-            throw new IllegalArgumentException("User not found with ID: " + id);
+            throw new IllegalArgumentException(ApplicationConstants.ERROR_USER_NOT_FOUND);
         }
         
         userRepository.deleteById(id);

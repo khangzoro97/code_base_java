@@ -1,5 +1,7 @@
 package com.example.backend.domain.model;
 
+import com.example.backend.constants.ApplicationConstants;
+import com.example.backend.constants.DomainConstants;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -29,21 +31,22 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name is required")
-    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
-    @Column(nullable = false, length = 100)
+    @NotBlank(message = ApplicationConstants.VALIDATION_NAME_REQUIRED)
+    @Size(min = DomainConstants.MIN_NAME_LENGTH, max = DomainConstants.MAX_NAME_LENGTH, 
+          message = ApplicationConstants.VALIDATION_NAME_REQUIRED)
+    @Column(nullable = false, length = DomainConstants.MAX_NAME_LENGTH)
     private String name;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    @Column(nullable = false, unique = true, length = 255)
+    @NotBlank(message = ApplicationConstants.VALIDATION_EMAIL_REQUIRED)
+    @Email(message = ApplicationConstants.VALIDATION_EMAIL_INVALID)
+    @Column(nullable = false, unique = true, length = DomainConstants.MAX_EMAIL_LENGTH)
     private String email;
 
-    @Size(max = 500, message = "Bio must not exceed 500 characters")
-    @Column(length = 500)
+    @Size(max = DomainConstants.MAX_BIO_LENGTH)
+    @Column(length = DomainConstants.MAX_BIO_LENGTH)
     private String bio;
 
-    @NotBlank(message = "Password is required")
+    @NotBlank(message = ApplicationConstants.VALIDATION_PASSWORD_REQUIRED)
     @Column(nullable = false, length = 255)
     private String password;
 

@@ -3,6 +3,7 @@ package com.example.backend.infrastructure.controller;
 import com.example.backend.application.dto.UserRequest;
 import com.example.backend.application.dto.UserResponse;
 import com.example.backend.application.service.UserService;
+import com.example.backend.constants.ApiConstants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,7 +33,7 @@ import java.util.List;
  * - DELETE /api/users/{id} - Delete
  */
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping(ApiConstants.USERS_BASE_PATH)
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Users", description = "User management API endpoints")
@@ -44,7 +45,7 @@ public class UserController {
     @PostMapping
     @Operation(summary = "Create user", description = "Create a new user (requires authentication)")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
-        log.info("POST /api/users - Creating new user");
+        log.info("POST {} - Creating new user", ApiConstants.USERS_BASE_PATH);
         UserResponse response = userService.createUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -52,7 +53,7 @@ public class UserController {
     @GetMapping("/{id}")
     @Operation(summary = "Get user by ID", description = "Retrieve a user by their ID (requires authentication)")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
-        log.info("GET /api/users/{} - Fetching user", id);
+        log.info("GET {}/{} - Fetching user", ApiConstants.USERS_BASE_PATH, id);
         UserResponse response = userService.getUserById(id);
         return ResponseEntity.ok(response);
     }
@@ -60,7 +61,7 @@ public class UserController {
     @GetMapping
     @Operation(summary = "Get all users", description = "Retrieve all users (requires authentication)")
     public ResponseEntity<List<UserResponse>> getAllUsers() {
-        log.info("GET /api/users - Fetching all users");
+        log.info("GET {} - Fetching all users", ApiConstants.USERS_BASE_PATH);
         List<UserResponse> responses = userService.getAllUsers();
         return ResponseEntity.ok(responses);
     }
@@ -70,7 +71,7 @@ public class UserController {
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserRequest request) {
-        log.info("PUT /api/users/{} - Updating user", id);
+        log.info("PUT {}/{} - Updating user", ApiConstants.USERS_BASE_PATH, id);
         UserResponse response = userService.updateUser(id, request);
         return ResponseEntity.ok(response);
     }
@@ -78,7 +79,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete user", description = "Delete a user by ID (requires authentication)")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        log.info("DELETE /api/users/{} - Deleting user", id);
+        log.info("DELETE {}/{} - Deleting user", ApiConstants.USERS_BASE_PATH, id);
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
