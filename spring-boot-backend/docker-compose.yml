@@ -36,8 +36,10 @@ services:
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
       LOG_FILE_PATH: ./logs
+      DEBUG_ENABLED: ${DEBUG_ENABLED:-false}  # Set to true to enable debug on port 5005
     ports:
       - "${SERVER_PORT:-8080}:8080"
+      - "${DEBUG_PORT:-5005}:5005"  # Debug port
     volumes:
       - ./logs:/app/logs
     depends_on:

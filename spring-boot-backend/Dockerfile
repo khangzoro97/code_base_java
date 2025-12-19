@@ -32,8 +32,8 @@ WORKDIR /app
 # Copy jar from build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Expose port (override with -e SERVER_PORT=8080)
-EXPOSE 8080
+# Expose ports (8080 for application, 5005 for debug)
+EXPOSE 8080 5005
 
 # Health check (requires Spring Boot Actuator dependency)
 # Uncomment và thêm spring-boot-starter-actuator vào pom.xml để enable
@@ -42,10 +42,18 @@ EXPOSE 8080
 
 # Run application
 # Use exec form để signal handling hoạt động đúng
-ENTRYPOINT ["java", \
-    "-XX:+UseContainerSupport", \
-    "-XX:MaxRAMPercentage=75.0", \
-    "-Djava.security.egd=file:/dev/./urandom", \
-    "-jar", \
-    "app.jar"]
+# Enable debug mode if DEBUG_ENABLED=true (default: false)
+ENTRYPOINT ["sh", "-c", \
+    "if [ \"$DEBUG_ENABLED\" = \"true\" ]; then \
+        java -XX:+UseContainerSupport \
+             -XX:MaxRAMPercentage=75.0 \
+             -Djava.security.egd=file:/dev/./urandom \
+             -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 \
+             -jar app.jar; \
+    else \
+        java -XX:+UseContainerSupport \
+             -XX:MaxRAMPercentage=75.0 \
+             -Djava.security.egd=file:/dev/./urandom \
+             -jar app.jar; \
+    fi"]
 
